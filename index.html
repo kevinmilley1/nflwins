@@ -58,26 +58,11 @@
       transition: background 0.3s ease;
     }
 
-    /* Top 3 styles */
-    tbody tr:nth-child(1) td {
-      background: linear-gradient(to right, #ffd700, #ffb700);
+    /* Gold scoreboard column */
+    td.scoreboard, th.scoreboard {
+      background: #FFD700;
       color: #000;
       font-weight: bold;
-      font-size: 1.3rem;
-    }
-
-    tbody tr:nth-child(2) td {
-      background: linear-gradient(to right, #c0c0c0, #a9a9a9);
-      color: #000;
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
-
-    tbody tr:nth-child(3) td {
-      background: linear-gradient(to right, #cd7f32, #b87333);
-      color: #000;
-      font-weight: bold;
-      font-size: 1.15rem;
     }
   </style>
 </head>
@@ -90,9 +75,9 @@
   </table>
 
   <script>
-    // Replace these with your values
-    const sheetId = "1umpqBqUFwYuuKdAq3RTQkaCo-86dz0fuO3lfXdYOvc4";
-    const apiKey = "AIzaSyBzMF0PaL-OJmAbg45t_coBoUZWxXm6ox8";
+    // Replace with your values
+    const sheetId = "YOUR_SHEET_ID_HERE";
+    const apiKey = "YOUR_API_KEY_HERE";
     const sheetName = "Sheet1"; // Tab name
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
@@ -111,7 +96,6 @@
           return;
         }
 
-        // Build table
         const thead = table.querySelector("thead");
         const tbody = table.querySelector("tbody");
         thead.innerHTML = "";
@@ -122,6 +106,7 @@
         values[0].forEach(h => {
           const th = document.createElement("th");
           th.textContent = h;
+          if (h.toLowerCase() === "scoreboard") th.classList.add("scoreboard");
           headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
@@ -129,9 +114,14 @@
         // Data rows
         values.slice(1).forEach(row => {
           const tr = document.createElement("tr");
-          row.forEach(cell => {
+          row.forEach((cell, idx) => {
             const td = document.createElement("td");
             td.textContent = cell;
+
+            // Match header name → scoreboard
+            if (values[0][idx] && values[0][idx].toLowerCase() === "scoreboard") {
+              td.classList.add("scoreboard");
+            }
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
