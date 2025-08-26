@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Live Google Sheet Table</title>
+  <title>Live Google Sheet Data</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; }
     h1 { margin-bottom: 0.5rem; }
@@ -15,7 +15,7 @@
 </head>
 <body>
   <h1>Live Google Sheet Data</h1>
-  <p>Automatically pulled from the published sheet.</p>
+  <p>Automatically pulled from the published sheet (CSV link required).</p>
   <div id="status">Loading data…</div>
   <table id="sheetTable">
     <thead></thead>
@@ -23,7 +23,8 @@
   </table>
 
   <script>
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSCKJsdq6QicXSx0VKp6VcGIS3UDMqUBFegn563mfh7Dd7RpFOTKUVHKc8X6kVt01Uij-byo0rmJwpI/pub?output=csv";
+    // Replace this with your actual published-to-web CSV link
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?output=csv";
 
     async function loadSheet() {
       const status = document.getElementById("status");
