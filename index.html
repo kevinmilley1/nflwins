@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Google Sheets Data Feed</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
+    h1 { margin-bottom: 0.25rem; }
+    .note { margin: 0.5rem 0 1rem; font-size: 0.95rem; }
+    .config { background: #f6f6f6; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { position: sticky; top: 0; background: #fafafa; }
+    th, td { padding: 0.6rem 0.5rem; border: 1px solid #ddd; text-align: left; }
+    caption { text-align: left; margin-bottom: 0.5rem; font-weight: 600; }
+    .hidden { display: none; }
+    .error { color: #b00020; }
+    .controls { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    input[type="text"] { width: 100%; max-width: 720px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; }
+    button { padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    @media (max-width: 640px) {
+      th, td { font-size: 14px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      input[type="text"] { max-width: 100%; }
+    }
+  </style>
+  <!-- Papa Parse for robust CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+</head>
+<body>
+  <h1>Live Google Sheets Data Feed</h1>
+  <p class="note">
+    Replace the URL below with your <strong>Published to the web</strong> Google Sheets CSV link
+    (File → Share → Publish to web → Entire document → CSV). Then host this file anywhere (GitHub Pages, Netlify, Vercel, etc.).
+  </p>
+
+  <div class="config">
+    <div class="controls">
+      <input id="sheetUrl" type="text"
+             placeholder="Paste your Google Sheets CSV URL here"
+             value="REPLACE_WITH_YOUR_SHEET_CSV_URL" />
+      <button id="loadBtn">Load Data</button>
+      <button id="refreshBtn" disabled>Refresh</button>
+      <label><input type="checkbox" id="autoRefreshChk"> Auto-refresh every 5 minutes</label>
+    </div>
+    <div id="status" class="note"></div>
+    <div id="error" class="note error hidden"></div>
+  </div>
+
+  <table id="data-table" aria-live="polite">
+    <caption>Data</caption>
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // Helper: fetch and parse CSV with PapaParse
+    async function fetchCsv(url) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(url, {
+          download: true,
+          header: false,
+          dynamicTyping: false,
+          skipEmptyLines: true,
+          complete: results => resolve(results.data),
+          error: err => reject(err)
+        });
+      });
+    }
+
+    function clearTable() {
+      document.querySelector("#data-table thead").innerHTML = "";
+      document.querySelector("#data-table tbody").innerHTML = "";
+    }
+
+    function renderTable(rows) {
+      clearTable();
+      if (!rows || rows.length === 0) return;
+
+      const thead = document.querySelector("#data-table thead");
+      const tbody = document.querySelector("#data-table tbody");
+
+      // First row as header
+      const headerRow = document.createElement("tr");
+      rows[0].forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+
+      // Remaining rows as body
+      for (let i = 1; i < rows.length; i++) {
+        const tr = document.createElement("tr");
+        rows[i].forEach(cell => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    function cacheBuster(url) {
+      try {
+        const u = new URL(url);
+        u.searchParams.set("_", Date.now().toString());
+        return u.toString();
+      } catch {
+        // If invalid URL object (e.g. relative), fallback
+        const sep = url.includes("?") ? "&" : "?";
+        return url + sep + "_=" + Date.now();
+      }
+    }
+
+    const sheetUrlInput = document.getElementById("sheetUrl");
+    const loadBtn = document.getElementById("loadBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const autoRefreshChk = document.getElementById("autoRefreshChk");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+
+    let currentUrl = null;
+    let refreshTimer = null;
+
+    async function loadData() {
+      const url = sheetUrlInput.value.trim();
+      if (!url || url === "REPLACE_WITH_YOUR_SHEET_CSV_URL") {
+        showError("Please paste a valid Google Sheets CSV URL.");
+        return;
+      }
+      setBusy(true);
+      showStatus("Loading…");
+      hideError();
+      try {
+        const data = await fetchCsv(cacheBuster(url));
+        renderTable(data);
+        currentUrl = url;
+        showStatus("Loaded " + (data?.length || 0) + " rows.");
+        refreshBtn.disabled = false;
+      } catch (e) {
+        console.error(e);
+        showError("Could not load CSV. Make sure the sheet is published to the web and the link is correct.");
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function refreshData() {
+      if (!currentUrl) return;
+      sheetUrlInput.value = currentUrl;
+      loadData();
+    }
+
+    function setBusy(isBusy) {
+      loadBtn.disabled = isBusy;
+      refreshBtn.disabled = isBusy || !currentUrl;
+    }
+
+    function showStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    }
+
+    function hideError() {
+      errorEl.classList.add("hidden");
+    }
+
+    loadBtn.addEventListener("click", loadData);
+    refreshBtn.addEventListener("click", refreshData);
+
+    autoRefreshChk.addEventListener("change", () => {
+      if (autoRefreshChk.checked) {
+        // 5 minutes
+        refreshTimer = setInterval(refreshData, 5 * 60 * 1000);
+      } else if (refreshTimer) {
+        clearInterval(refreshTimer);
+      }
+    });
+
+    // If user left the placeholder replaced, don't auto-load.
+    // Otherwise, attempt an initial load.
+    window.addEventListener("DOMContentLoaded", () => {
+      const v = sheetUrlInput.value.trim();
+      if (v && v !== "REPLACE_WITH_YOUR_SHEET_CSV_URL") {
+        loadData();
+      }
+    });
+  </script>
+</body>
+</html>
