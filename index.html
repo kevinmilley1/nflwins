@@ -152,29 +152,6 @@ values.slice(1).forEach(row => {
       }
     }
 
-    // Reorder columns: put "Scoreboard" first if it exists
-function reorderColumns(headers, row) {
-  const idx = headers.findIndex(h => h.toLowerCase() === "scoreboard");
-  if (idx === -1) return row; // no change if not found
-  const scoreboardCell = row[idx];
-  const newRow = [scoreboardCell];
-  row.forEach((cell, i) => {
-    if (i !== idx) newRow.push(cell);
-  });
-  return newRow;
-}
-
-    // Header row
-let headers = values[0];
-headers = reorderColumns(headers, headers); // move scoreboard
-const headerRow = document.createElement("tr");
-headers.forEach(h => {
-  const th = document.createElement("th");
-  th.textContent = h;
-  if (h.toLowerCase() === "scoreboard") th.classList.add("scoreboard");
-  headerRow.appendChild(th);
-});
-thead.appendChild(headerRow);
 
 
     loadSheet();
