@@ -135,4 +135,29 @@
         });
         thead.appendChild(headerRow);
 
-        // Dat
+        // Data rows
+        values.slice(1).forEach(row => {
+          const tr = document.createElement("tr");
+          row.forEach((cell, idx) => {
+            const td = document.createElement("td");
+            td.textContent = cell;
+
+            if (values[0][idx] && values[0][idx].toLowerCase() === "scoreboard") {
+              td.classList.add("scoreboard");
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        status.textContent = "Data loaded ✅";
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Failed to load data: " + err.message;
+      }
+    }
+
+    loadSheet();
+  </script>
+</body>
+</html>
