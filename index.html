@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaderboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <style>
@@ -10,42 +11,49 @@
       background: linear-gradient(135deg, #1a1a2e, #16213e);
       color: #fff;
       margin: 0;
-      padding: 2rem;
+      padding: 1rem;
       text-align: center;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       margin-bottom: 1rem;
       text-shadow: 2px 2px #000;
     }
 
     #status {
       margin-bottom: 1rem;
-      font-size: 1.2rem;
+      font-size: 1rem;
       color: #aaa;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
     }
 
     table {
       margin: 0 auto;
       border-collapse: collapse;
-      width: 80%;
+      width: 100%;
+      min-width: 400px; /* force horizontal scroll on very small screens */
       box-shadow: 0 0 20px rgba(0,0,0,0.6);
       border-radius: 12px;
       overflow: hidden;
     }
 
     th, td {
-      padding: 1rem;
+      padding: 0.75rem;
       border: none;
       text-align: center;
-      font-size: 1.1rem;
+      font-size: 1rem;
+      word-break: break-word;
     }
 
     th {
       background: #0f3460;
       color: #fff;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       text-transform: uppercase;
     }
 
@@ -64,15 +72,31 @@
       color: #000;
       font-weight: bold;
     }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      th, td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+      table {
+        min-width: unset; /* allow full width */
+      }
+    }
   </style>
 </head>
 <body>
   <h1>🏆 Leaderboard 🏆</h1>
   <div id="status">Loading data…</div>
-  <table id="sheetTable">
-    <thead></thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-container">
+    <table id="sheetTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     // Replace with your values
@@ -111,30 +135,4 @@
         });
         thead.appendChild(headerRow);
 
-        // Data rows
-        values.slice(1).forEach(row => {
-          const tr = document.createElement("tr");
-          row.forEach((cell, idx) => {
-            const td = document.createElement("td");
-            td.textContent = cell;
-
-            // Match header name → scoreboard
-            if (values[0][idx] && values[0][idx].toLowerCase() === "scoreboard") {
-              td.classList.add("scoreboard");
-            }
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-
-        status.textContent = "Data loaded ✅";
-      } catch (err) {
-        console.error(err);
-        status.textContent = "Failed to load data: " + err.message;
-      }
-    }
-
-    loadSheet();
-  </script>
-</body>
-</html>
+        // Dat
