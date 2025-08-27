@@ -66,16 +66,16 @@
     }
 
     table tr:nth-child(12) {
-  background-color: #f4b400; /* same as header gold */
-  color: white;
-  font-weight: bold;}
+      background-color: #f4b400; /* same as header gold */
+      color: white;
+      font-weight: bold;
+    }
 
-      table tr:nth-child(n+13) td:nth-child(4) {
-  background-color: gold;
-  font-weight: bold;
-  color: black;
-}
-}
+    table tr:nth-child(n+13) td:nth-child(4) {
+      background-color: gold;
+      font-weight: bold;
+      color: black;
+    }
   </style>
 </head>
 <body>
@@ -87,10 +87,9 @@
   </table>
 
   <script>
-    // Replace with your values
     const sheetId = "1umpqBqUFwYuuKdAq3RTQkaCo-86dz0fuO3lfXdYOvc4";
     const apiKey = "AIzaSyBzMF0PaL-OJmAbg45t_coBoUZWxXm6ox8";
-    const sheetName = "Sheet1"; // Tab name
+    const sheetName = "Sheet1";
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
@@ -123,14 +122,18 @@
         });
         thead.appendChild(headerRow);
 
-        // Data rows
-        values.slice(1).forEach(row => {
+        // Reorder rows: rows 13+ first
+        let dataRows = values.slice(1); // exclude header
+        const topRows = dataRows.slice(0, 12); // current rows 1-12
+        const bottomRows = dataRows.slice(12); // rows 13+
+        dataRows = [...bottomRows, ...topRows]; // reorder
+
+        // Render rows
+        dataRows.forEach(row => {
           const tr = document.createElement("tr");
           row.forEach((cell, idx) => {
             const td = document.createElement("td");
             td.textContent = cell;
-
-            // Match header name → scoreboard
             if (values[0][idx] && values[0][idx].toLowerCase() === "scoreboard") {
               td.classList.add("scoreboard");
             }
